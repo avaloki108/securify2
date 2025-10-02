@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:24.04
 ARG SOLC=0.5.12
 
 # install basic packages
@@ -25,7 +25,7 @@ RUN wget https://github.com/souffle-lang/souffle/releases/download/1.6.2/souffle
 # install graphviz and pip
 RUN apt-get update && apt-get -y install\
         graphviz \
-        python3.7 \
+        python3.13 \
         python3-pip \
 	curl
 
@@ -43,7 +43,7 @@ COPY . /sec
 ENV PYTHONPATH /sec
 
 # install securify requirements
-RUN python3.7 setup.py install && python3.7 -m pip install --user -r /requirements.txt && python3.7 -m pip install requests
+RUN python3.13 setup.py install && python3.13 -m pip install --user -r /requirements.txt && python3.13 -m pip install requests
 
 RUN cd /sec/securify/staticanalysis/libfunctors/ && ./compile_functors.sh
 
@@ -60,4 +60,4 @@ ENV LD_LIBRARY_PATH /sec/securify/staticanalysis/libfunctors
 # Should be removed
 RUN cd /sec/securify/ && securify staticanalysis/testContract.sol
 
-ENTRYPOINT ["python3.7", "securify/__main__.py"]
+ENTRYPOINT ["python3.13", "securify/__main__.py"]

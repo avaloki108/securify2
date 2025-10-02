@@ -5,6 +5,7 @@ setup(
     name='securify',
     version='0.0.1',
     packages=find_packages(),
+    python_requires='>=3.13',
     install_requires=[
         'py-solc',
         'semantic_version',
