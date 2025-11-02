@@ -3,7 +3,7 @@ from typing import List
 from securify.analyses.patterns.abstract_pattern import Severity, PatternMatch, MatchComment
 from securify.analyses.patterns.ast.abstract_ast_pattern import AbstractAstPattern
 from securify.analyses.patterns.ast.declaration_utils import DeclarationUtils
-from securify.solidity.v_0_5_x.solidity_grammar_core import ContractDefinition, InheritanceSpecifier, StateVariableDeclaration
+from securify.solidity.v_0_5_x.solidity_grammar_core import ContractDefinition, InheritanceSpecifier, VariableDeclaration
 
 
 class StorageCollisionPattern(DeclarationUtils, AbstractAstPattern):
@@ -29,7 +29,7 @@ class StorageCollisionPattern(DeclarationUtils, AbstractAstPattern):
             
             # If contract uses inheritance, check for storage variables
             if len(inheritance_list) > 0:
-                state_vars = contract.find_descendants_of_type(StateVariableDeclaration)
+                state_vars = contract.find_descendants_of_type(VariableDeclaration)
                 
                 # Look for contracts with both inheritance and state variables
                 # This could indicate a storage collision risk, especially in proxy patterns

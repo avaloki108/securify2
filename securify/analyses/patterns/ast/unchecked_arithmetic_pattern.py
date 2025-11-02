@@ -3,7 +3,6 @@ from typing import List
 from securify.analyses.patterns.abstract_pattern import Severity, PatternMatch, MatchComment
 from securify.analyses.patterns.ast.abstract_ast_pattern import AbstractAstPattern
 from securify.analyses.patterns.ast.declaration_utils import DeclarationUtils
-from securify.solidity.v_0_5_x.solidity_grammar_core import UncheckedBlock
 import re
 
 
@@ -16,24 +15,24 @@ class UncheckedArithmeticPattern(DeclarationUtils, AbstractAstPattern):
     tags = {"solidity_version": "0.8.0+", "category": "arithmetic"}
 
     def find_matches(self) -> List[PatternMatch]:
-        ast_root = self.get_ast_root()
+        # Since UncheckedBlock is not in the grammar (Solidity 0.8.0+ feature),
+        # we'll search through the source code for unchecked blocks
+        source_code = self.analysis_context.source_code
         
-        # Try to find UncheckedBlock nodes
-        # Note: This requires the grammar to support unchecked blocks
-        # For Solidity 0.8.0+, we need to detect unchecked { ... } statements
+        if not source_code:
+            return
         
-        try:
-            nodes = ast_root.find_descendants_of_type(UncheckedBlock)
-            for node in nodes:
-                yield self.match_warning().with_info(
-                    MatchComment("Unchecked block detected - ensure arithmetic operations cannot overflow/underflow"),
-                    *self.ast_node_info(node)
-                )
-        except AttributeError:
-            # UncheckedBlock type might not exist in the grammar
-            # In that case, we'll search through the source code
-            source_code = self.analysis_context.source_code
-            if source_code and "unchecked" in source_code:
-                # Pattern found in source but not in AST - this means the grammar needs updating
-                # For now, we'll create a general warning
-                pass
+        # Search for unchecked blocks in the source code
+        pattern = re.compile(r'\bunchecked\s*\{', re.MULTILINE)
+        matches = pattern.finditer(source_code)
+        
+        for match in matches:
+            # Calculate line number
+            line_num = source_code[:match.start()].count('\n') + 1
+            
+            # Create a warning for each unchecked block found
+            # We can't provide exact AST node info since unchecked isn't in the grammar
+            # So we'll create a generic match comment
+            yield self.match_warning().with_info(
+                MatchComment(f"Unchecked block detected at line {line_num} - ensure arithmetic operations cannot overflow/underflow")
+            )
