@@ -1,10 +1,10 @@
-from distutils.core import setup
-from setuptools import find_packages
+from setuptools import setup, find_packages
 
 setup(
     name='securify',
     version='0.0.1',
     packages=find_packages(),
+    python_requires='>=3.8',
     install_requires=[
         'py-solc',
         'semantic_version',

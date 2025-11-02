@@ -759,7 +759,7 @@ def _parse_dependencies(rule):
                     attributes |= attr_info
                     dependency_type = None
 
-                elif isinstance(annotation_ast, (ast.Name, ast.Attribute, ast.NameConstant, ast.Subscript)):
+                elif isinstance(annotation_ast, (ast.Name, ast.Attribute, ast.Constant, ast.Subscript)):
                     attr_or_type = _eval_ast(annotation_ast, context=func)
 
                     if isinstance(attr_or_type, _AttributeBase):
