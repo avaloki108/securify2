@@ -1,2 +1,0 @@
-[console_scripts]
-securify = securify.__main__:main

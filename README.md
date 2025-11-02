@@ -66,11 +66,11 @@ After the prerequisites have been installed, we can set up the python virtual en
 In the project's root folder, execute the following commands to set up and activate the virtual environment:
 
 ```
-virtualenv --python=/usr/bin/python3.7 venv
+virtualenv --python=python3 venv
 source venv/bin/activate
 ```
 
-Verify that the `python` version is actually `3.7`:
+Verify that the `python` version is at least `3.8`:
 
 ```
 python --version
