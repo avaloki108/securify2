@@ -43,7 +43,7 @@ COPY . /sec
 ENV PYTHONPATH /sec
 
 # install securify requirements
-RUN python3.13 setup.py install && python3.13 -m pip install --user -r /requirements.txt && python3.13 -m pip install requests
+RUN python3 setup.py install && python3 -m pip install --user -r /requirements.txt && python3 -m pip install requests
 
 RUN cd /sec/securify/staticanalysis/libfunctors/ && ./compile_functors.sh
 
@@ -60,4 +60,4 @@ ENV LD_LIBRARY_PATH /sec/securify/staticanalysis/libfunctors
 # Should be removed
 RUN cd /sec/securify/ && securify staticanalysis/testContract.sol
 
-ENTRYPOINT ["python3.13", "securify/__main__.py"]
+ENTRYPOINT ["python3", "securify/__main__.py"]

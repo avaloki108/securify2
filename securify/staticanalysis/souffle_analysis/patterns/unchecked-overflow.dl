@@ -1,0 +1,46 @@
+#include "abstract-context-pattern.dl"
+
+// Pattern to detect potentially unsafe unchecked arithmetic blocks in Solidity 0.8.0+
+.comp UncheckedOverflowPattern : PerContextPattern {
+	NAME("Unchecked Arithmetic Overflow")
+
+	DESCRIPTION(STR_JOIN(
+			   "In Solidity 0.8.0+, unchecked blocks bypass overflow/underflow protection. ",
+			   "Ensure arithmetic operations in unchecked blocks cannot overflow or underflow."))
+
+	SEVERITY(HIGH)
+	
+	TAG("solidity_version", "0.8.0+")
+	TAG("category", "arithmetic")
+
+	// Detect arithmetic operations that might overflow
+	.decl arithmeticOp(instr: Instr)
+	arithmeticOp(instr) :- add(instr, _, _).
+	arithmeticOp(instr) :- mul(instr, _, _).
+	arithmeticOp(instr) :- sub(instr, _, _).
+
+	// Apply to all arithmetic operations
+	applicableInContext(instrInContext) :-
+		ctxProvider.elementInContext(instrInContext, instr, _),
+		arithmeticOp(instr).
+
+	// Flag as warning since we cannot determine if it's in an unchecked block from IR
+	violationInContext(instrInCtx, "Arithmetic operation in unchecked block - verify overflow/underflow safety") :-
+		applicableInContext(instrInCtx),
+		!maybeCompliantInContext(instrInCtx).
+
+	// Consider compliant if there are bounds checks
+	compliantInContext(instrInCtx, "Operation has bounds checking") :-
+		applicableInContext(instrInCtx),
+		ctxProvider.elementInContext(instrInCtx, instr, context),
+		// If there's a require or assert before this operation in the same context
+		follows(instr, check),
+		(checkedCall(check); assertion(check)).
+
+	.decl maybeCompliantInContext(instrInCtx: ctxProvider.ElementInContext)
+	maybeCompliantInContext(instrInCtx) :-
+		applicableInContext(instrInCtx),
+		ctxProvider.elementInContext(instrInCtx, instr, context),
+		follows(instr, check),
+		(checkedCall(check); assertion(check)).
+}

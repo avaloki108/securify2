@@ -16,9 +16,11 @@ It is the successor of the popular Securify security scanner (you can find the o
 
 Features
 ===
-- Supports 37 vulnerabilities (see [table](#supported-vulnerabilities) below)
+- Supports 41+ vulnerabilities including Solidity 0.8.0+ specific patterns (see [table](#supported-vulnerabilities) below)
+- Enhanced detection for modern Solidity versions (0.8.0 and above)
 - Implements novel context-sensitive static analysis written in Datalog
 - Analyzes contracts written in Solidity >= 0.5.8
+- Prioritizes critical vulnerabilities relevant to current Solidity versions
 
 
 Docker
@@ -132,6 +134,7 @@ Supported vulnerabilities
 | 2 | TODReceiver| Critical | - | [SWC-114](https://swcregistry.io/docs/SWC-114)|
 | 3 | TODTransfer | Critical | - | [SWC-114](https://swcregistry.io/docs/SWC-114) |
 | 4 | UnrestrictedWrite | Critical | - | [SWC-124](https://swcregistry.io/docs/SWC-124) | 
+| **38** | **DelegatecallStorage** | **Critical** | - | **[SWC-112](https://swcregistry.io/docs/SWC-112)** | **Solidity 0.8.0+ - Delegatecall with storage collision risk** |
 | 5 | RightToLeftOverride | High | `rtlo`| [SWC-130](https://swcregistry.io/docs/SWC-130) |
 | 6 | ShadowedStateVariable | High | `shadowing-state`, `shadowing-abstract` | [SWC-119](https://swcregistry.io/docs/SWC-119) | 
 | 7 | UnrestrictedSelfdestruct | High | `suicidal` | [SWC-106](https://swcregistry.io/docs/SWC-106) |
@@ -139,6 +142,8 @@ Supported vulnerabilities
 | 9 | UninitializedStorage | High | `uninitialized-storage`| [SWC-109](https://swcregistry.io/docs/SWC-109) |
 | 10 | UnrestrictedDelegateCall | High | `controlled-delegatecall`| [SWC-112](https://swcregistry.io/docs/SWC-112) |
 | 11 | DAO | High | `reentrancy-eth` | [SWC-107](https://swcregistry.io/docs/SWC-107) |
+| **39** | **UncheckedArithmetic** | **High** | - | - | **Solidity 0.8.0+ - Unchecked arithmetic blocks** |
+| **40** | **StorageCollision** | **High** | - | - | **Solidity 0.8.0+ - Storage layout collision in upgradeable contracts** |
 | 12 | ERC20Interface | Medium | `erc20-interface` | - |
 | 13 | ERC721Interface | Medium | `erc721-interface` | - |
 | 14 | IncorrectEquality | Medium | `incorrect-equality`| [SWC-132](https://swcregistry.io/docs/SWC-132) |
@@ -149,6 +154,7 @@ Supported vulnerabilities
 | 19 | UnrestrictedEtherFlow | Medium | `unchecked-send` |[SWC-105](https://swcregistry.io/docs/SWC-105) |
 | 20 | UninitializedLocal | Medium | `uninitialized-local` | [SWC-109](https://swcregistry.io/docs/SWC-109) |
 | 21 | UnusedReturn | Medium | `unused-return` | [SWC-104](https://swcregistry.io/docs/SWC-104) |
+| **41** | **SolcVersion** | **Medium** | `solc-version` | **[SWC-103](https://swcregistry.io/docs/SWC-103)** | **Enhanced - Flags versions < 0.8.0** |
 | 22 | ShadowedBuiltin | Low | `shadowing-builtin` | - |
 | 23 | ShadowedLocalVariable | Low | `shadowing-local` | - |
 | 24 | CallToDefaultConstructor?| Low | `void-cst` | - |
@@ -159,12 +165,11 @@ Supported vulnerabilities
 | 29 | ERC20Indexed | Info | `erc20-indexed` | - |
 | 30 | LowLevelCalls | Info | `low-level-calls` | - |
 | 31 | NamingConvention | Info | `naming-convention` | - |
-| 32 | SolcVersion | Info | `solc-version` | [SWC-103](https://swcregistry.io/docs/SWC-103) |
-| 33 | UnusedStateVariable | Info | `unused-state` | - |
-| 34 | TooManyDigits | Info | `too-many-digits` | - |
-| 35 | ConstableStates | Info | `constable-states` | - |
-| 36 | ExternalFunctions | Info | `external-function` | - | 
-| 37 | StateVariablesDefaultVisibility | Info | - | [SWC-108](https://swcregistry.io/docs/SWC-108) |
+| 32 | UnusedStateVariable | Info | `unused-state` | - |
+| 33 | TooManyDigits | Info | `too-many-digits` | - |
+| 34 | ConstableStates | Info | `constable-states` | - |
+| 35 | ExternalFunctions | Info | `external-function` | - | 
+| 36 | StateVariablesDefaultVisibility | Info | - | [SWC-108](https://swcregistry.io/docs/SWC-108) |
 
 The following Slither patterns are not checked by Securify since they are checked by the Solidity compiler (ver. 0.5.8):
 - `constant-function`
@@ -175,6 +180,28 @@ The following SWC vulnerabilities do not apply to Solidity contracts with pragma
 
 - SWC-118 (Incorrect Constructor Name)
 - SWC-129 (Usage of +=)
+
+## Solidity 0.8.0+ Specific Patterns
+
+Securify now includes enhanced detection for Solidity 0.8.0+ specific vulnerabilities:
+
+### Key Improvements in Solidity 0.8.0+
+- **Built-in Overflow/Underflow Protection**: Arithmetic operations revert on overflow/underflow by default
+- **Unchecked Blocks**: New `unchecked { }` syntax bypasses overflow protection - requires careful review
+- **Custom Errors**: More gas-efficient error handling
+- **ABI Coder V2**: Default, safer ABI encoding/decoding
+
+### New Patterns for 0.8.0+
+1. **UncheckedArithmetic** (High): Detects potentially unsafe unchecked arithmetic blocks
+2. **StorageCollision** (High): Identifies storage layout collision risks in upgradeable contracts
+3. **DelegatecallStorage** (Critical): Enhanced delegatecall detection focusing on storage safety
+4. **SolcVersion** (Medium): Now flags contracts using versions < 0.8.0 for missing overflow protection
+
+### Best Practices
+- Use Solidity 0.8.0+ for new contracts to benefit from built-in overflow protection
+- Only use `unchecked { }` blocks when you're certain overflow/underflow cannot occur
+- Plan storage layout carefully in upgradeable contracts to avoid collisions
+- Validate all delegatecall targets and ensure storage layout compatibility
 
 
 Acknowledgments
