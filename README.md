@@ -11,7 +11,7 @@ and [ChainSecurity](https://chainsecurity.com). The core
 behind Securify was conducted at the [Secure, Reliable, and Intelligent Systems Lab](https://www.sri.inf.ethz.ch/) at ETH
 Zurich.
 
-It is the successor of the popular Securify security scanner (you can find the old version [here](https://github.com/eth-sri/securify)). Securify 2.5 builds upon Securify 2.0 with enhanced features and modern Solidity support.
+It is the successor of the popular Securify security scanner (you can find the old version [here](https://github.com/eth-sri/securify)). This version (2.5) is the latest release, building upon the previous 2.0 version with enhanced features and modern Solidity support.
 
 
 Features
