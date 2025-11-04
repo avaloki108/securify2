@@ -1,3 +1,5 @@
+#include "abstract-context-pattern.dl"
+
 // SC02: Price Oracle Manipulation
 // Detects potential price oracle manipulation vulnerabilities
 .comp PriceOracleManipulationPattern : PerContextPattern {
@@ -73,10 +75,16 @@
         ctxProvider.elementInContext(callCtx, call, context),
         // Look for time-based averaging patterns
         isInFunction(call, func),
+        annotation(func, "name", name),
         (
-            // Function name contains TWAP-related keywords
-            annotation(func, "name", name),
-            (contains("twap", name); contains("TWAP", name); contains("timeWeighted", name))
+            // Function name contains TWAP-related keywords (case-insensitive patterns)
+            contains("twap", name); 
+            contains("TWAP", name); 
+            contains("timeWeighted", name);
+            contains("time_weighted", name);
+            contains("time-weighted", name);
+            contains("TimeWeighted", name);
+            contains("average", name), contains("time", name)
         ).
 
     .decl branchingCondition(condition: SSA, branchBlock: Block)

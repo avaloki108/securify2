@@ -122,6 +122,13 @@ patternTag(id, "id", id) :- patternId(id).
 #include "patterns/unused-variables.dl"
 #include "patterns/reentrancy-no-eth.dl"
 #include "patterns/reentrancy-benign.dl"
+#include "patterns/dos-gas-limit.dl"
+#include "patterns/unchecked-overflow.dl"
+
+// OWASP Smart Contract Top 10 Patterns
+#include "patterns/price-oracle-manipulation.dl"
+#include "patterns/flash-loan-attacks.dl"
+#include "patterns/insecure-randomness.dl"
 
 
 REGISTER_PATTERN(PASSPattern)
@@ -157,6 +164,14 @@ REGISTER_PATTERN(ExternalFunctionPattern)
 // REGISTER_PATTERN(ArbitrarySendPattern) It's probably quite the same with unrestricted etherflow
 REGISTER_PATTERN(ReentrancyNoETHPattern)
 REGISTER_PATTERN(ReentrancyBenignPattern)
+REGISTER_PATTERN(DosGasLimitPattern)
+REGISTER_PATTERN(UncheckedOverflowPattern)
+
+// OWASP Smart Contract Top 10 Patterns
+REGISTER_PATTERN(PriceOracleManipulationPattern)
+REGISTER_PATTERN(FlashLoanAttacksPattern)
+REGISTER_PATTERN(InsecureRandomnessPattern)
+
 //TODO: Further analysis of when a variable is used
 //REGISTER_PATTERN(UnusedVariablesPattern)
 

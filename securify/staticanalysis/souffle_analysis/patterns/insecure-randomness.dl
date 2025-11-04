@@ -1,3 +1,5 @@
+#include "abstract-context-pattern.dl"
+
 // SC09: Insecure Randomness
 // Detects use of insecure randomness sources
 .comp InsecureRandomnessPattern : PerContextPattern {

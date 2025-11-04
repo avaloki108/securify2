@@ -1,3 +1,5 @@
+#include "abstract-context-pattern.dl"
+
 // SC07: Flash Loan Attacks
 // Detects potential flash loan attack vulnerabilities
 .comp FlashLoanAttacksPattern : PerContextPattern {
@@ -59,8 +61,8 @@
             callInfo(transfer, _, "call")
         ),
         callValue(transfer, value),
-        !valueOf(valueCtx, "0"),
-        ctxProvider.elementInContext(valueCtx, value, _).
+        ctxProvider.elementInContext(valueCtx, value, _),
+        !(valueKnown(valueCtx), valueOf(valueCtx, "0")).
 
     // Check if function updates critical state variables
     .decl hasCriticalStateUpdate(func: Function)

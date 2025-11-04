@@ -72,7 +72,7 @@ virtualenv --python=/usr/bin/python3.12 venv
 source venv/bin/activate
 ```
 
-Verify that the `python` version is actually `3.12` or higher:
+Verify that the `python` version is actually `3.12` or higher (any version from 3.12 onwards is supported):
 
 ```
 python --version
