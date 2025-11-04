@@ -72,13 +72,13 @@ def normalize_severity_args(args):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
-        description='securify: A static analyzer for Ethereum contracts.',
+        description='securify2.5: A static analyzer for Ethereum contracts.',
         usage="securify contract.sol [opts]")
 
     parser.add_argument('contract',
                         help='A contract to analyze. Can be a file or an address of a contract on blockchain')
 
-    parser.add_argument("--ignore-pragma", help="By default securify changes the pragma directives in contracts with pragma \
+    parser.add_argument("--ignore-pragma", help="By default securify2.5 changes the pragma directives in contracts with pragma \
                                                 directives <= 0.5.8. Use this flag to ignore this functionality",
                                                 action='store_true')
 

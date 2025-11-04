@@ -1,9 +1,9 @@
-![securify](/img/securify-v2-0.png)
+![securify](/img/securify-v2-5.png)
 
-Securify v2.0
+Securify v2.5
 ===
 
-Securify 2.0 is a security scanner for Ethereum smart contracts supported by the
+Securify 2.5 is a security scanner for Ethereum smart contracts supported by the
 [Ethereum
 Foundation](https://ethereum.github.io/blog/2018/08/17/ethereum-foundation-grants-update-wave-3/)
 and [ChainSecurity](https://chainsecurity.com). The core
@@ -11,7 +11,7 @@ and [ChainSecurity](https://chainsecurity.com). The core
 behind Securify was conducted at the [Secure, Reliable, and Intelligent Systems Lab](https://www.sri.inf.ethz.ch/) at ETH
 Zurich.
 
-It is the successor of the popular Securify security scanner (you can find the old version [here](https://github.com/eth-sri/securify)).
+It is the successor of the popular Securify security scanner (you can find the old version [here](https://github.com/eth-sri/securify)). This version (2.5) is the latest release, building upon the previous 2.0 version with enhanced features and modern Solidity support.
 
 
 Features
@@ -102,7 +102,7 @@ Usage
 ===
 
 ## Analyzing a contract
-Currently Securify2 supports only flat contracts, i.e., contracts that do not contain import statements.
+Currently Securify2.5 supports only flat contracts, i.e., contracts that do not contain import statements.
 
 To analyze a local contract simply run:
 ```
@@ -171,19 +171,19 @@ Supported vulnerabilities
 | 35 | ExternalFunctions | Info | `external-function` | - | 
 | 36 | StateVariablesDefaultVisibility | Info | - | [SWC-108](https://swcregistry.io/docs/SWC-108) |
 
-The following Slither patterns are not checked by Securify since they are checked by the Solidity compiler (ver. 0.5.8):
+The following Slither patterns are not checked by Securify2.5 since they are checked by the Solidity compiler (ver. 0.5.8):
 - `constant-function`
 - `deprecated-standards`
 - `pragma`
 
-The following SWC vulnerabilities do not apply to Solidity contracts with pragma >=5.8 and are therefore not checked by Securify:
+The following SWC vulnerabilities do not apply to Solidity contracts with pragma >=5.8 and are therefore not checked by Securify2.5:
 
 - SWC-118 (Incorrect Constructor Name)
 - SWC-129 (Usage of +=)
 
 ## Solidity 0.8.0+ Specific Patterns
 
-Securify now includes enhanced detection for Solidity 0.8.0+ specific vulnerabilities:
+Securify2.5 now includes enhanced detection for Solidity 0.8.0+ specific vulnerabilities:
 
 ### Key Improvements in Solidity 0.8.0+
 - **Built-in Overflow/Underflow Protection**: Arithmetic operations revert on overflow/underflow by default
@@ -206,7 +206,7 @@ Securify now includes enhanced detection for Solidity 0.8.0+ specific vulnerabil
 
 Acknowledgments
 ===
-The following people have contributed to Securify v2.0:
+The following people have contributed to Securify v2.5:
 
 - Ioannis Sachinoglou
 - Lavrentios Frobeen
