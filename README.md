@@ -110,27 +110,58 @@ Usage
 ===
 
 ## Analyzing a contract
-Currently Securify2.5 supports only flat contracts, i.e., contracts that do not contain import statements.
+Securify2.5 supports both flat contracts and Truffle projects.
 
-To analyze a local contract simply run:
+### Single Contract Analysis
+To analyze a local flat contract (without import statements) simply run:
 ```
 securify <contract_source>.sol [--use-patterns Pattern1 Pattern2 ...]
 ```
+
+### Truffle Project Analysis
+To analyze a Truffle project, run:
+```
+securify /path/to/truffle/project --truffle-project
+```
+
+Or analyze a specific contract in a Truffle project:
+```
+securify /path/to/truffle/project --truffle-project --contract-name MyContract
+```
+
+Securify will automatically:
+- Detect the Truffle project structure
+- Flatten contracts to resolve import statements
+- Analyze all contracts in the project
+
+### Blockchain Contract Analysis
 Or download it from the Blockchain using the Etherscan.io API:
 ```
 securify <contract_address> --from-blockchain [--key <key-file>]
 ```
 *Notice that you need an API-key from Etherscan.io to use this functionality.*
 
+### Filtering by Severity
 To analyze a contract against specific severity levels run:
 ```
 securify <contract_source>.sol [--include-severity Severity1 Severity2]
 securify <contract_source>.sol [--exclude-severity Severity1 Severity2]
 ```
+
+### Listing Patterns
 To get all the available patterns run:
 ```
 securify --list
 ```
+
+## Truffle Integration Notes
+
+When analyzing Truffle projects:
+1. Securify automatically detects Truffle projects by looking for `truffle-config.js` or `truffle.js`
+2. Contracts with import statements are automatically flattened
+3. If you have `truffle-flattener` installed globally or in your project, Securify will use it for optimal flattening
+4. Otherwise, Securify uses a built-in flattening mechanism
+5. Each contract in the project is analyzed separately with individual reports
 
 Supported vulnerabilities
 ===

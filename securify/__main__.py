@@ -6,10 +6,12 @@ from securify.staticanalysis import static_analysis
 from securify.staticanalysis.factencoder import encode
 from securify.staticanalysis.visualization import visualize
 from securify.utils.ethereum_blockchain import get_contract_from_blockchain
+from securify.utils.truffle_integration import is_truffle_project, get_truffle_project_root, TruffleProject
 import re
 import semantic_version
 from securify.solidity.solidity_ast_compiler import  compiler_version
 import sys
+import os
 
 def get_list_of_patterns(context=AnalysisContext(), patterns='all', exclude_patterns=[], severity_inc=[], severity_exc=[]):
     pattern_classes = discover_patterns()
@@ -76,7 +78,7 @@ def parse_arguments():
         usage="securify contract.sol [opts]")
 
     parser.add_argument('contract',
-                        help='A contract to analyze. Can be a file or an address of a contract on blockchain')
+                        help='A contract to analyze. Can be a .sol file, a Truffle project directory, or an address of a contract on blockchain')
 
     parser.add_argument("--ignore-pragma", help="By default securify2.5 changes the pragma directives in contracts with pragma \
                                                 directives <= 0.5.8. Use this flag to ignore this functionality",
@@ -139,6 +141,17 @@ def parse_arguments():
                                default=False)
 
     parser.add_argument('--visualize', '-v', help='Visualize AST', action='store_true')
+
+
+    truffle_group = parser.add_argument_group('Truffle Integration')
+
+    truffle_group.add_argument('--truffle-project', '-t',
+                               help="Analyze all contracts in a Truffle project.",
+                               action='store_true')
+    
+    truffle_group.add_argument('--contract-name',
+                               help="For Truffle projects, specify which contract to analyze (default: analyze all).",
+                               default=None)
 
 
     etherscan_group = parser.add_argument_group('Etherscan API')
@@ -235,6 +248,118 @@ def fix_pragma(contract):
 
     return fixed_pragma_file
 
+
+def analyze_contract(contract_path, args, souffle_config):
+    """
+    Analyze a single contract file
+    
+    Args:
+        contract_path: Path to the contract file
+        args: Command-line arguments
+        souffle_config: Configuration for Souffle
+        
+    Returns:
+        List of pattern matches
+    """
+    if not args.ignore_pragma:
+        contract_path = fix_pragma(contract_path)
+    
+    config = AnalysisConfiguration(
+        ast_compiler=lambda t: solidity_ast_compiler.compile_ast(t.source_file),
+        cfg_compiler=lambda t: solidity_cfg_compiler.compile_cfg(t.ast).cfg,
+        static_analysis=lambda t: static_analysis.analyze_cfg(t.cfg, **souffle_config),
+    )
+    
+    context = AnalysisContext(
+        config=config,
+        source_file=contract_path
+    )
+    
+    if args.visualize:
+        cfg = context.cfg
+        facts, _ = encode(cfg)
+        visualize(facts).render("out/dl", format="svg", cleanup=True)
+    
+    patterns = get_list_of_patterns(
+        context=context,
+        patterns=args.use_patterns,
+        exclude_patterns=args.exclude_patterns,
+        severity_inc=args.include_severity,
+        severity_exc=args.exclude_severity
+    )
+    
+    matches = []
+    for pattern in patterns:
+        matches.extend(pattern.find_matches())
+    
+    skip_compliant = not args.show_compliants
+    print_pattern_matches(
+        context, matches, skip_compliant=skip_compliant,
+        include_contracts=args.include_contracts,
+        exclude_contracts=args.exclude_contracts
+    )
+    
+    return matches
+
+
+def handle_truffle_project(project_path, args, souffle_config):
+    """
+    Handle analysis of a Truffle project
+    
+    Args:
+        project_path: Path to the Truffle project
+        args: Command-line arguments
+        souffle_config: Configuration for Souffle
+    """
+    try:
+        project = TruffleProject(project_path)
+        print(f"Detected Truffle project at: {project.project_path}")
+        
+        contracts = project.list_contracts()
+        
+        if not contracts:
+            print("No contracts found in the Truffle project.")
+            return
+        
+        # Filter by contract name if specified
+        if args.contract_name:
+            contracts = [c for c in contracts if c.stem == args.contract_name]
+            if not contracts:
+                print(f"Contract '{args.contract_name}' not found in the project.")
+                return
+        
+        print(f"Found {len(contracts)} contract(s) to analyze.")
+        
+        # Analyze each contract
+        for contract_file in contracts:
+            print(f"\n{'='*80}")
+            print(f"Analyzing: {contract_file.name}")
+            print(f"{'='*80}\n")
+            
+            try:
+                # Flatten the contract to handle imports
+                flattened_contract = project.flatten_contract(contract_file)
+                
+                # Analyze the flattened contract
+                analyze_contract(flattened_contract, args, souffle_config)
+                
+                # Clean up temporary flattened file
+                if flattened_contract != str(contract_file):
+                    try:
+                        os.unlink(flattened_contract)
+                    except (OSError, FileNotFoundError):
+                        # Ignore errors when cleaning up temp files
+                        pass
+                        
+            except Exception as e:
+                print(f"Error analyzing {contract_file.name}: {str(e)}")
+                continue
+    
+    except Exception as e:
+        print(f"Error processing Truffle project: {str(e)}")
+        sys.exit(1)
+
+
 def main():
 
 
@@ -249,44 +374,57 @@ def main():
     if args.from_blockchain:
         contract = get_contract_from_blockchain(args.contract, args.key)
 
-    if not args.ignore_pragma:
-        contract = fix_pragma(contract)
-
     souffle_config = dict(use_interpreter=args.interpreter, force_recompilation=args.recompile,
                           library_dir=args.library_dir)
 
-    config = AnalysisConfiguration(
-        # TODO: this returns only the dict ast, but should return the object representation
-        ast_compiler=lambda t: solidity_ast_compiler.compile_ast(t.source_file),
-        cfg_compiler=lambda t: solidity_cfg_compiler.compile_cfg(t.ast).cfg,
-        static_analysis=lambda t: static_analysis.analyze_cfg(t.cfg, **souffle_config),
-    )
+    # Check if input is a Truffle project
+    is_truffle = args.truffle_project or is_truffle_project(contract)
+    
+    if is_truffle:
+        # Handle Truffle project
+        project_path = contract if os.path.isdir(contract) else get_truffle_project_root(contract)
+        if project_path:
+            handle_truffle_project(project_path, args, souffle_config)
+        else:
+            print("Could not find Truffle project. Make sure truffle-config.js or truffle.js exists.")
+            sys.exit(1)
+    else:
+        # Handle single contract file (original behavior)
+        if not args.ignore_pragma:
+            contract = fix_pragma(contract)
 
-    context = AnalysisContext(
-        config=config,
-        source_file=contract
-    )
+        config = AnalysisConfiguration(
+            # TODO: this returns only the dict ast, but should return the object representation
+            ast_compiler=lambda t: solidity_ast_compiler.compile_ast(t.source_file),
+            cfg_compiler=lambda t: solidity_cfg_compiler.compile_cfg(t.ast).cfg,
+            static_analysis=lambda t: static_analysis.analyze_cfg(t.cfg, **souffle_config),
+        )
 
-    if args.visualize:
-        cfg = context.cfg
-        facts, _ = encode(cfg)
-        visualize(facts).render("out/dl", format="svg", cleanup=True)
+        context = AnalysisContext(
+            config=config,
+            source_file=contract
+        )
 
-    patterns = get_list_of_patterns(context=context,
-                                    patterns=args.use_patterns,
-                                    exclude_patterns=args.exclude_patterns,
-                                    severity_inc=args.include_severity,
-                                    severity_exc=args.exclude_severity)
+        if args.visualize:
+            cfg = context.cfg
+            facts, _ = encode(cfg)
+            visualize(facts).render("out/dl", format="svg", cleanup=True)
 
-    matches = []
+        patterns = get_list_of_patterns(context=context,
+                                        patterns=args.use_patterns,
+                                        exclude_patterns=args.exclude_patterns,
+                                        severity_inc=args.include_severity,
+                                        severity_exc=args.exclude_severity)
 
-    for pattern in patterns:
-        matches.extend(pattern.find_matches())
+        matches = []
 
-    skip_compliant = not args.show_compliants
-    print_pattern_matches(context, matches, skip_compliant=skip_compliant,
-                          include_contracts=args.include_contracts,
-                          exclude_contracts=args.exclude_contracts)
+        for pattern in patterns:
+            matches.extend(pattern.find_matches())
+
+        skip_compliant = not args.show_compliants
+        print_pattern_matches(context, matches, skip_compliant=skip_compliant,
+                              include_contracts=args.include_contracts,
+                              exclude_contracts=args.exclude_contracts)
 
 
 if __name__ == '__main__':
